@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd"
+        logicalFilePath="changelog-0.1.0.xml">
+
+    <changeSet id="1" author="fedorchuck">
+        <createTable tableName="users_data">
+            <column name="id" type="SERIAL">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="account_id" type="SERIAL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="collection_name" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="access_token" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="10" author="fedorchuck">
+        <insert tableName="users_data">
+            <column name="account_id"
+                    value="1"
+            />
+            <column name="collection_name"
+                    value="test_fedorchuck"
+            />
+            <column name="access_token"
+                    value="5bafb3452200f8b88a1c466cb94fe43c"
+            />
+            <column name="created_at"
+                    value="2017-07-07 16:27:40.417000"
+            />
+        </insert>
+        <rollback>
+            <sql>delete from users_data where account_id = '1'</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="tag" author="fedorchuck">
+        <tagDatabase tag="v/0.1.0"/>
+    </changeSet>
+
+</databaseChangeLog>
