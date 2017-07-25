@@ -21,7 +21,7 @@ public class UsersLogsDatabase extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
-        client = MongoClient.createShared(vertx, DatabaseUtil.getMongoConfig());
+        client = MongoClient.createShared(vertx, new DatabaseUtil().getMongoConfig());
 
         vertx.eventBus().consumer(UsersLogsDatabase.Address.create.address()).handler(this::create);
         vertx.eventBus().consumer(UsersLogsDatabase.Address.read.address()).handler(this::read);
@@ -32,16 +32,16 @@ public class UsersLogsDatabase extends AbstractVerticle {
     private void create(Message message) {
         UsersLogs entry = (UsersLogs) message.body();
         client.save(entry.getCollectionName(), entry.getData(), res -> {
-            String inserted_id = res.result();
+            String insertedId = res.result();
             if (res.failed()) {
                 DatabaseRequestHandler.operationFailed(message, entry, res.cause());
                 return;
             }
-            if (inserted_id == null) {
+            if (insertedId == null) {
                 DatabaseRequestHandler.nullResult(message, entry);
                 return;
             }
-            message.reply(inserted_id);
+            message.reply(insertedId);
         });
     }
 
@@ -57,8 +57,11 @@ public class UsersLogsDatabase extends AbstractVerticle {
                 DatabaseRequestHandler.nullResult(message, entry);
                 return;
             }
-            //TODO: return object
-            message.reply(result);
+            if (result.size() != 1) {
+                DatabaseRequestHandler.invalidSize(message, entry, result);
+                return;
+            }
+            message.reply(result.get(0).toString());
         });
     }
 
@@ -106,15 +109,16 @@ public class UsersLogsDatabase extends AbstractVerticle {
         /**
          * <b>Get account data.</b>
          * <ul>
-         * <li>Takes: {@link String remote-logger access token }</li>
-         * <li>Returns: {@link UsersLogger}</li>
+         * <li>Takes: {@link UsersLogs }</li>
+         * <li>Returns: {@link String JSON}</li>
          * </ul>
          **/
         read,
 
         remove,
 
-        delete,;
+        delete,
+        ;
 
         public String address() {
             return BASE_ADDRESS + name();

@@ -3,9 +3,13 @@ package com.github.fedorchuck.remote_logger;
 import com.github.fedorchuck.remote_logger.dal.model.UsersLogger;
 import com.github.fedorchuck.remote_logger.dal.model.UsersLogs;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.*;
+
+import java.util.List;
 
 /**
  * Logs messages for remote_logger-srv
@@ -31,6 +35,10 @@ public interface RemoteLoggerSrvLogger extends BasicLogger {
 
     //region ERROR
     @LogMessage(level = Logger.Level.ERROR)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 2000, value = "It should never happen.")
+    void errorItShouldNeverHappen(@Cause Throwable throwable);
+
+    @LogMessage(level = Logger.Level.ERROR)
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 2100, value = "Exception in CS.")
     void errorExceptionInCS(@Cause Throwable throwable);
 
@@ -46,12 +54,31 @@ public interface RemoteLoggerSrvLogger extends BasicLogger {
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 3002, value = "Database error")
     void errorDatabaseFailed(@Cause Throwable throwable);
 
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 3003,
+            value = "Environment variable {0} was not found in environment and gradle.properties ")
+    void errorEnvironmentVariableNotFound(String varName);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 3004,
+            value = "{0} has invalid format")
+    void errorReadProperty(String name, @Cause DecodeException ex);
+
     //endregion ERROR
 
     //region WARN
     @LogMessage(level = Logger.Level.WARN)
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 4000, value = "Not implemented: {0}")
     void warnNotImplemented(String message);
+
+    @LogMessage(level = Logger.Level.WARN)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 4001,
+            value = "Environment variable {0} is null or empty. Try to get value in gradle.properties ")
+    void warnEnvironmentVariableNotFound(String varName);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 4002, value = "It should never happen.")
+    void warnItShouldNeverHappen(@Cause Throwable throwable);
 
     @LogMessage(level = Logger.Level.WARN)
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 4010, value = "Failed to create account: {0}")
@@ -98,6 +125,10 @@ public interface RemoteLoggerSrvLogger extends BasicLogger {
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 4052, value = "Mongo null result. Entry: {0}")
     void warnMongoNullResult(UsersLogs entry);
 
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 4053, value = "Invalid size ({1}). Entry: {0} Record: {3}")
+    void warnMongoInvalidSize(UsersLogs entry, int size, String record);
+
     //endregion WARN
 
     //region INFO
@@ -138,6 +169,12 @@ public interface RemoteLoggerSrvLogger extends BasicLogger {
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 9012,
             value = "Read entry from users_data where account_id is: {0}")
     void traceReadByAccessTokenUsersData(String accountId);
+
+    @LogMessage(level = Logger.Level.TRACE)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 9013,
+            value = "Delete entry from users_data where account_id is: {0}")
+    void traceDeleteByAccountIdUsersData(Long accountId);
+
 
     @LogMessage(level = Logger.Level.TRACE)
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 9051,

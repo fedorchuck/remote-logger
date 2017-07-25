@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"recordId", "createdTs"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UsersLogger {
 
     /**
      * Assigned record id
      */
-    private Long id;
+    private Long recordId;
 
     /**
      * RL account id

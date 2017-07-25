@@ -1,4 +1,4 @@
-package com.github.fedorchuck.remote_logger.util;
+package com.github.fedorchuck.remote_logger;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -11,24 +11,56 @@ import java.util.function.Consumer;
 /*
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public class Runner {
+public class Runner {private static final String UNIT_EXAMPLES_DIR = "unit-examples";
+    private static final String UNIT_EXAMPLES_JAVA_DIR = UNIT_EXAMPLES_DIR + "/src/main/java/";
+    private static final String UNIT_EXAMPLES_JS_DIR = UNIT_EXAMPLES_DIR + "/src/main/js/";
+    private static final String UNIT_EXAMPLES_GROOVY_DIR = UNIT_EXAMPLES_DIR + "/src/main/groovy/";
 
-    private static final String MONGO_EXAMPLES_DIR = "mongo-examples";
-    private static final String MONGO_EXAMPLES_JAVA_DIR = MONGO_EXAMPLES_DIR + "/src/main/java/";
-    private static final String MONGO_EXAMPLES_JS_DIR = MONGO_EXAMPLES_DIR + "/src/main/js/";
-
-    public static void runExample(Class clazz) {
-        runExample(MONGO_EXAMPLES_JAVA_DIR, clazz, new VertxOptions(), null);
+    public static void runClusteredExample(Class clazz) {
+        runExample(UNIT_EXAMPLES_JAVA_DIR, clazz, new VertxOptions().setClustered(true), null);
     }
 
+    public static void runExample(Class clazz) {
+        runExample(UNIT_EXAMPLES_JAVA_DIR, clazz, new VertxOptions().setClustered(false), null);
+    }
+
+    // JavaScript examples
+
     public static void runJSExample(String scriptName) {
-        runScriptExample(MONGO_EXAMPLES_JS_DIR, "io/vertx/examples/mongo/mongo_client_verticle.js", new VertxOptions());
+        runScriptExample(UNIT_EXAMPLES_JS_DIR, scriptName, new VertxOptions().setClustered(false));
+    }
+
+    public static void runJSExampleClustered(String scriptName) {
+        runScriptExample(UNIT_EXAMPLES_JS_DIR, scriptName, new VertxOptions().setClustered(true));
+    }
+
+    static class JSVertxUnitTest {
+        public static void main(String[] args) {
+            Runner.runJSExample("io/vertx/example/unit/test/vertx_unit_test.js");
+        }
+    }
+
+    // Groovy examples
+
+    public static void runGroovyExample(String scriptName) {
+        runScriptExample(UNIT_EXAMPLES_GROOVY_DIR, scriptName, new VertxOptions().setClustered(false));
+    }
+
+    public static void runGroovyExampleClustered(String scriptName) {
+        runScriptExample(UNIT_EXAMPLES_GROOVY_DIR, scriptName, new VertxOptions().setClustered(true));
+    }
+
+    static class GroovyVertxUnitTest {
+        public static void main(String[] args) {
+            Runner.runGroovyExample("io/vertx/example/unit/test/vertx_unit_test.groovy");
+        }
     }
 
     public static void runExample(String exampleDir, Class clazz, VertxOptions options, DeploymentOptions
             deploymentOptions) {
         runExample(exampleDir + clazz.getPackage().getName().replace(".", "/"), clazz.getName(), options, deploymentOptions);
     }
+
 
     public static void runScriptExample(String prefix, String scriptName, VertxOptions options) {
         File file = new File(scriptName);
@@ -82,6 +114,4 @@ public class Runner {
             runner.accept(vertx);
         }
     }
-
-
 }

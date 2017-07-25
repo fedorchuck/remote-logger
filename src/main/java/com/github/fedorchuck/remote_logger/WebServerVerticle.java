@@ -19,7 +19,7 @@ public class WebServerVerticle extends AbstractVerticle {
 
         router.mountSubRouter("/log", new LoggerController(vertx).getRouter());
 
-        int port = NullCheckUtil.tryParseInteger(System.getenv("SERVER_PORT"), 8080);
+        int port = NullCheckUtil.tryParseInteger(System.getenv("PORT"), 8080);
         vertx.createHttpServer().requestHandler(router::accept).listen(port, res -> {
             if (res.succeeded()) {
                 RemoteLoggerSrvLogger.LOG.listening(port);

@@ -89,4 +89,9 @@ class DatabaseRequestHandler {
         LOG.warnMongoNullResult(entry);
         message.fail(HttpStatus.SC_INTERNAL_SERVER_ERROR, "result is null");
     }
+
+    public static void invalidSize(Message message, UsersLogs entry, List<JsonObject> result) {
+        LOG.warnMongoInvalidSize(entry, result.size(), result.toString());
+        message.fail(HttpStatus.SC_INTERNAL_SERVER_ERROR, "Invalid size");
+    }
 }

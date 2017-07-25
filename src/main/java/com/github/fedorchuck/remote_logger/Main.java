@@ -48,16 +48,7 @@ public class Main extends AbstractVerticle {
 
             //endregion setup database
 
-
             //region setup logic
-//            vertx.deployVerticle(MarketplaceToTextback.class.getName(), it ->{
-//                if (it.failed()) {
-//                    printErrorMessage(it, "MarketplaceToTextback");
-//                    Runtime.getRuntime().halt(-1);
-//                } else {
-//                    LOG.infoDeployedVerticle("MarketplaceToTextback");
-//                }
-//            });
             //endregion setup logic
 
             //region setup web server

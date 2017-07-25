@@ -13,7 +13,7 @@ import java.time.ZoneId;
 public class Mappers {
     public static UsersLogger convertJsonObjectToUsersLogger(JsonObject row) {
         return UsersLogger.builder()
-                .id(row.getLong("id"))
+                .recordId(row.getLong("record_id"))
                 .accountId(row.getLong("account_id"))
                 .collectionName(row.getString("collection_name"))
                 .accessToken(row.getString("access_token"))

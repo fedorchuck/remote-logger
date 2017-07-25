@@ -2,4 +2,5 @@
 .idea/
 .vertx/
 build/
+out/
 gradle.properties

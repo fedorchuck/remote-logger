@@ -9,17 +9,17 @@
 
     <changeSet id="1" author="fedorchuck">
         <createTable tableName="users_data">
-            <column name="id" type="SERIAL">
+            <column name="record_id" type="SERIAL">
                 <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="account_id" type="SERIAL">
                 <constraints nullable="false"/>
             </column>
             <column name="collection_name" type="TEXT">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="access_token" type="TEXT">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="created_at" type="DATETIME">
                 <constraints nullable="false"/>
@@ -46,6 +46,7 @@
             <sql>delete from users_data where account_id = '1'</sql>
         </rollback>
     </changeSet>
+    <!--INSERT INTO users_data (account_id, collection_name, access_token, created_at) VALUES (1, 'test_fedorchuck', '5bafb3452200f8b88a1c466cb94fe43c', '2017-07-07 16:27:40.417000');-->
 
     <changeSet id="tag" author="fedorchuck">
         <tagDatabase tag="v/0.1.0"/>

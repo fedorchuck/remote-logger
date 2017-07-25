@@ -38,7 +38,7 @@ public class LiquibaseVerticle extends AbstractVerticle {
             throw new Error("SCHEMA_VERSION isn't set.");
         }
 
-        LinkedHashMap<String, Object> map = DatabaseUtil.getPostgresqlDatabaseKeys();
+        LinkedHashMap<String, Object> map = new DatabaseUtil().getPostgresqlDatabaseKeys();
         params = Json.decodeValue(Json.encode(map), LiquibaseVerticle.SqlParams.class);
         client = JDBCClient.createShared(vertx, new JsonObject(map));
 

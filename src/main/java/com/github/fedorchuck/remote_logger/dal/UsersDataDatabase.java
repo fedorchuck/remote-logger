@@ -4,8 +4,10 @@ import com.github.fedorchuck.jsqlb.Column;
 import com.github.fedorchuck.jsqlb.JSQLBuilder;
 import com.github.fedorchuck.jsqlb.Table;
 import com.github.fedorchuck.jsqlb.postgresql.PGConditionalExpression;
-import com.github.fedorchuck.jsqlb.postgresql.PGDataTypes;
 import com.github.fedorchuck.jsqlb.postgresql.PostgreSQL;
+import com.github.fedorchuck.jsqlb.postgresql.datatypes.INT;
+import com.github.fedorchuck.jsqlb.postgresql.datatypes.TEXT;
+import com.github.fedorchuck.jsqlb.postgresql.datatypes.TIMESTAMP;
 import com.github.fedorchuck.remote_logger.RemoteLoggerSrvLogger;
 import com.github.fedorchuck.remote_logger.dal.model.UsersLogger;
 import com.github.fedorchuck.remote_logger.infrastructure.EventBusAddressDescriptor;
@@ -31,18 +33,19 @@ public class UsersDataDatabase extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
-        client = JDBCClient.createShared(vertx, new JsonObject(DatabaseUtil.getPostgresqlDatabaseKeys()));
+        client = JDBCClient.createShared(vertx, new JsonObject(new DatabaseUtil().getPostgresqlDatabaseKeys()));
 
         jsqlBuilder = new PostgreSQL();
         table = new Table("users_data");
-        table.addColumn(new Column("id", PGDataTypes.INT));
-        table.addColumn(new Column("account_id", PGDataTypes.INT));
-        table.addColumn(new Column("collection_name", PGDataTypes.TEXT));
-        table.addColumn(new Column("access_token", PGDataTypes.TEXT));
-        table.addColumn(new Column("created_at", PGDataTypes.TIMESTAMP));
+        table.addColumn(new Column("record_id", new INT()));
+        table.addColumn(new Column("account_id", new INT()));
+        table.addColumn(new Column("collection_name", new TEXT()));
+        table.addColumn(new Column("access_token", new TEXT()));
+        table.addColumn(new Column("created_at", new TIMESTAMP()));
 
         vertx.eventBus().consumer(Address.create.address()).handler(this::create);
         vertx.eventBus().consumer(Address.readByAccessToken.address()).handler(this::readByAccessToken);
+        vertx.eventBus().consumer(Address.deleteByAccountId.address()).handler(this::deleteByAccountId);
     }
 
     private void create(Message message) {
@@ -55,9 +58,9 @@ public class UsersDataDatabase extends AbstractVerticle {
             SQLConnection connection = conn.result();
             UsersLogger databaseEntry = (UsersLogger) message.body();
             LOG.traceCreateUsersDataEntry(databaseEntry);
-//"INSERT INTO " + TABLE + " (" + FIELDS_FOR_INSERT_EX_ID + ") values (?, ?, ?, ?);
+//"INSERT INTO " + TABLE + " (" + FIELDS_FOR_INSERT_EX_ID + ") values (?, ?, ?, ?); //todo: returning
             connection.updateWithParams(
-                    jsqlBuilder.insert(table, table.getColumnsExcept(table.getColumn("id"))).getSQL(),
+                    jsqlBuilder.insert(table, table.getColumnsExcept(table.getColumn("record_id"))).getSQL(),
                     new JsonArray(Arrays.asList(
                             databaseEntry.getAccountId(),
                             databaseEntry.getCollectionName(),
@@ -73,7 +76,7 @@ public class UsersDataDatabase extends AbstractVerticle {
                         }
 //"SELECT " + ALL_FIELDS_FOR_SELECT + " FROM " + TABLE + " WHERE id = ?;
                         connection.queryWithParams(
-                                jsqlBuilder.select().from(table).where(new PGConditionalExpression(table.getColumn("id")).equal()).getSQL(),
+                                jsqlBuilder.select().from(table).where(new PGConditionalExpression(table.getColumn("record_id")).equal()).getSQL(),
                                 res.result().getKeys(),
                                 resAfterCreate ->
                                         DatabaseRequestHandler.selectRow(connection, message, resAfterCreate, this));
@@ -101,6 +104,24 @@ public class UsersDataDatabase extends AbstractVerticle {
         });
     }
 
+    private void deleteByAccountId(Message message) {
+        client.getConnection(conn -> {
+            if (conn.failed()) {
+                DatabaseRequestHandler.connectionFail(conn, message);
+                return;
+            }
+
+            SQLConnection connection = conn.result();
+            Long accountId = (Long) message.body();
+            LOG.traceDeleteByAccountIdUsersData(accountId);
+
+            connection.queryWithParams(
+                    "DELETE FROM users_data WHERE account_id = ? returning *;",
+                    new JsonArray(Collections.singletonList(accountId)),
+                    res -> DatabaseRequestHandler.selectRow(connection, message, res, this));
+        });
+    }
+
     @Override
     public void stop() throws Exception {
     }
@@ -123,7 +144,14 @@ public class UsersDataDatabase extends AbstractVerticle {
          **/
         readByAccessToken,
         //TODO: readByAccountId
-        ;
+        /**
+         * <b>Delete account by *account_id*.</b>
+         * <ul>
+         * <li>Takes: {@link Long account_id }</li>
+         * <li>Returns: deleted {@link UsersLogger }</li>
+         * </ul>
+         **/
+        deleteByAccountId;
 
         public String address() {
             return BASE_ADDRESS + name();

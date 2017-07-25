@@ -13,6 +13,7 @@
     </root>
     <logger name="org.springframework" level="warn" additivity="false"/>
     <logger name="org.hibernate" level="warn" additivity="false"/>
+    <logger name="com.github.fedorchuck.remote_logger" level="trace"/>
 
 
 </configuration>

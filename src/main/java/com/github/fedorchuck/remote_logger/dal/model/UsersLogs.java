@@ -24,6 +24,7 @@ public class UsersLogs {
 
     /**
      * Data for safe
+     * TODO: JSON can not content line <b>"_id":</b>
      */
     @NotNull
     private JsonObject data;
