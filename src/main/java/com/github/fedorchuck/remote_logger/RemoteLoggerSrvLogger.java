@@ -113,6 +113,11 @@ public interface RemoteLoggerSrvLogger extends BasicLogger {
             value = "Failed to destroy account. Url: {0} StatusCode: {1}, StatusMessage: {2}, respBody: {3}")
     void warnFailedToDestroyAccount(String absoluteURI, int code, String statusMessage, Buffer respBody);
 
+    @LogMessage(level = Logger.Level.WARN)
+    @Message(format = Message.Format.MESSAGE_FORMAT, id = 4040,
+            value = "Failed to get data. Input token: {0}")
+    void warnFailedToCreateMongoDocument(String token, @Cause Throwable cause);
+
     @LogMessage(level = Logger.Level.ERROR)
     @Message(format = Message.Format.MESSAGE_FORMAT, id = 4050, value = "Postgresql connection failed. ")
     void warnPostgresqlConnectionFail(@Cause Throwable throwable);
