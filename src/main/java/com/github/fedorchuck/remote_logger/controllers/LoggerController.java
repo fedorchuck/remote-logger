@@ -1,6 +1,10 @@
 package com.github.fedorchuck.remote_logger.controllers;
 
 import com.github.fedorchuck.remote_logger.RemoteLoggerSrvLogger;
+import com.github.fedorchuck.remote_logger.commont.api.ApiResponse;
+import com.github.fedorchuck.remote_logger.commont.api.ResponseCode;
+import com.github.fedorchuck.remote_logger.commont.api.Responses;
+import com.github.fedorchuck.remote_logger.commont.utils.ApiResponseFactory;
 import com.github.fedorchuck.remote_logger.dal.UsersDataDatabase;
 import com.github.fedorchuck.remote_logger.dal.UsersLogsDatabase;
 import com.github.fedorchuck.remote_logger.dal.model.UsersLogger;
@@ -46,9 +50,7 @@ public class LoggerController {
         String accessToken = routingContext.request().params().get("accessToken");
 
         LOG.warnNotImplemented("URL: /log/v0/:accessToken");
-        routingContext.response()
-                .setStatusCode(HttpStatus.SC_ACCEPTED)
-                .end();
+        Responses.json(routingContext, 200, ApiResponseFactory.successWithValue(ResponseCode.NOT_IMPLEMENTED));
     }
 
     /**
@@ -64,49 +66,24 @@ public class LoggerController {
                 res -> {
                     if (res.failed()) {
                         LOG.warnFailedToGetAccountInfo(accessToken, res.cause());
-                        if (res.cause() instanceof ReplyException) {
-                            //TODO: create wrapper for response
-                            routingContext.response()
-//                            .setStatusCode(((ReplyException) res.cause()).failureCode())
-                                    .setStatusMessage(res.cause().getMessage())
-                                    .end();
-                            return;
-                        } else {
-                            routingContext.response()
-                                    .setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
-                                    .end();
-                            return;
-                        }
+                        Responses.json(routingContext, 500, ApiResponseFactory.fail(res.cause()));
+                        return;
                     }
 
+                    UsersLogs userLogs = UsersLogs.builder()
+                            .collectionName(((UsersLogger) res.result().body()).getCollectionName())
+                            .data(routingContext.getBodyAsJson())
+                            .build();
                     eventBus.send(UsersLogsDatabase.Address.create.address(),
-                            UsersLogs.builder()
-                                    .collectionName(((UsersLogger) res.result().body()).getCollectionName())
-                                    .data(routingContext.getBodyAsJson())
-                                    .build(),
+                            userLogs,
                             createMongoEntry -> {
-
-                                if (res.failed()) {
-                                    //TODO: LOGGER
-                                    if (res.cause() instanceof ReplyException) {
-                                        //TODO: create wrapper for response
-                                        routingContext.response()
-                                                .setStatusCode(((ReplyException) res.cause()).failureCode())
-                                                .setStatusMessage(res.cause().getMessage())
-                                                .end();
-                                        return;
-                                    } else {
-                                        routingContext.response()
-                                                .setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
-                                                .end();
-                                        return;
-                                    }
+                                if (createMongoEntry.failed()) {
+                                    LOG.warnFailedToCreateMongoDocument(accessToken, res.cause());
+                                    Responses.json(routingContext, 500, ApiResponseFactory.fail(res.cause()));
+                                    return;
                                 }
 
-                                //TODO: return response
-                                routingContext.response()
-                                        .setStatusCode(HttpStatus.SC_ACCEPTED)
-                                        .end();
+                                Responses.json(routingContext, 200, (ApiResponse) createMongoEntry.result().body());
                             });
                 });
     }
@@ -132,8 +109,6 @@ public class LoggerController {
 
 
         LOG.warnNotImplemented("URL: /log/v0/:accessToken");
-        routingContext.response()
-                .setStatusCode(HttpStatus.SC_ACCEPTED)
-                .end();
+        Responses.json(routingContext, 200, ApiResponseFactory.successWithValue(ResponseCode.NOT_IMPLEMENTED));
     }
 }
